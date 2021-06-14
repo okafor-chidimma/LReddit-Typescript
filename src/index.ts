@@ -11,8 +11,8 @@ const main = async () => {
   await orm.getMigrator().up();
   // const post = orm.em.create(Post, { title: "my new post" });
   // await orm.em.persistAndFlush(post);
-  const posts = await orm.em.find(Post, {});
-  console.log(posts, "posts");
+  // const posts = await orm.em.find(Post, {});
+  // console.log(posts, "posts");
   //console.log(orm.em);
 };
 main().catch((err) => {
