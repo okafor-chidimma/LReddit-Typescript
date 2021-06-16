@@ -7,6 +7,7 @@ import { buildSchema } from "type-graphql";
 import { __prod__ } from "./constants";
 import config from "./mikro-orm.config";
 import PostResolver from "./resolvers/post";
+import UserResolver from "./resolvers/user";
 
 
 const main = async () => {
@@ -19,7 +20,7 @@ const main = async () => {
   const app = express();
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [PostResolver],
+      resolvers: [PostResolver,UserResolver],
       //turned off validator so that the default class-validator package that type graphql uses will not be used for us
       validate: false,
     }),
