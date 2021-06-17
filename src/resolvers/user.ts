@@ -1,5 +1,5 @@
 import * as argon2 from "argon2";
-import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
+import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
 
 import { User } from "../entities/User";
 import { MyContext } from "../utils/types";
@@ -9,10 +9,25 @@ import { UserResponse } from "../utils/custom-types/user-response-type";
 //created the post resolver by decorating the post class with resolver method
 @Resolver()
 export default class UserResolver {
+  @Query(() => UserResponse)
+  me(@Ctx() { em, req }: MyContext) {
+    if (!req.session.userId) {
+      return {
+        errors: [
+          {
+            field: "general",
+            message: "You are not logged in",
+          },
+        ],
+      };
+    }
+    const user = em.findOne(User, { id: req.session.userId });
+    return { user };
+  }
   @Mutation(() => UserResponse)
   async register(
     @Arg("data") { username, password }: RegisterInputType,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     //validate user input
     if (!username.trim()) {
@@ -45,7 +60,7 @@ export default class UserResolver {
     try {
       await em.persistAndFlush(user);
     } catch (err) {
-      if(err.code == "23505"){
+      if (err.code == "23505") {
         return {
           errors: [
             {
@@ -56,13 +71,13 @@ export default class UserResolver {
         };
       }
     }
-
+    req.session.userId = user.id;
     return { user };
   }
   @Mutation(() => UserResponse)
   async login(
     @Arg("data") { username, password }: RegisterInputType,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     //retrieve the user from db
     const user = await em.findOne(User, { username: username.toLowerCase() });
@@ -90,6 +105,10 @@ export default class UserResolver {
         ],
       };
     }
+    //store the userId session
+    //this will set the cookie on the user
+    //keep them logged in
+    req.session.userId = user.id;
     return {
       user,
     };
